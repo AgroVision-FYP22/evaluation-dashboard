@@ -1,66 +1,57 @@
 // src/components/SessionManager.tsx
 import React from 'react';
 import './SessionManager.css';
-
-interface Session {
-  id: string;
-  title: string;
-  date: string;
-  lastMessage: string;
-}
+import { SessionEntry } from '../services/sessionStore';
 
 interface SessionManagerProps {
+  sessions: SessionEntry[];
   currentSession: string | null;
   onSessionSelect: (sessionId: string) => void;
+  onNewSession: () => void;
+  onDeleteSession: (sessionId: string) => void;
 }
 
-const SessionManager: React.FC<SessionManagerProps> = ({ 
-  currentSession, 
-  onSessionSelect 
+const SessionManager: React.FC<SessionManagerProps> = ({
+  sessions,
+  currentSession,
+  onSessionSelect,
+  onNewSession,
+  onDeleteSession,
 }) => {
-  // Mock session data - this would be replaced with actual API calls
-  const sessions: Session[] = [
-    {
-      id: 'session-1',
-      title: 'Soil Analysis for Rice Field',
-      date: '2026-08-20',
-      lastMessage: 'What is the soil pH level?'
-    },
-    {
-      id: 'session-2',
-      title: 'Weather Impact Assessment',
-      date: '2026-08-19',
-      lastMessage: 'How will the weather affect my crops?'
-    },
-    {
-      id: 'session-3',
-      title: 'Disease Prevention Plan',
-      date: '2026-08-18',
-      lastMessage: 'What diseases are common in this area?'
-    },
-    {
-      id: 'session-4',
-      title: 'Fertilizer Recommendation',
-      date: '2026-08-17',
-      lastMessage: 'What fertilizer should I use?'
-    }
-  ];
-
   return (
     <div className="session-manager">
       <div className="session-header">
         <h3>Session History</h3>
+        <button className="new-session-btn" onClick={onNewSession}>
+          + New
+        </button>
       </div>
       <div className="session-list">
+        {sessions.length === 0 && (
+          <p className="session-empty">
+            No sessions yet. Ask a question to start one — conversation memory is kept
+            engine-side under the same session id.
+          </p>
+        )}
         {sessions.map((session) => (
-          <div 
+          <div
             key={session.id}
             className={`session-item ${currentSession === session.id ? 'active' : ''}`}
             onClick={() => onSessionSelect(session.id)}
           >
             <h4>{session.title}</h4>
-            <p className="date">{session.date}</p>
+            <p className="date">{new Date(session.updatedAt).toLocaleString()}</p>
             <p className="last-message">{session.lastMessage}</p>
+            <button
+              className="session-delete-btn"
+              title="Delete session (clears engine-side memory too)"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDeleteSession(session.id);
+              }}
+            >
+              Delete
+            </button>
           </div>
         ))}
       </div>

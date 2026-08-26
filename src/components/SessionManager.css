@@ -21,6 +21,51 @@
   font-size: 1.2rem;
 }
 
+.new-session-btn {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.new-session-btn:hover {
+  background-color: #2980b9;
+}
+
+.session-empty {
+  font-size: 0.85rem;
+  color: #bdc3c7;
+  line-height: 1.5;
+}
+
+.session-item {
+  position: relative;
+  padding-right: 5rem !important;
+}
+
+.session-delete-btn {
+  position: absolute;
+  right: 0.5rem;
+  bottom: 0.5rem;
+  background: transparent;
+  border: 1px solid #95a5a6;
+  color: #bdc3c7;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  padding: 0.15rem 0.45rem;
+  cursor: pointer;
+}
+
+.session-delete-btn:hover {
+  background-color: #e74c3c;
+  border-color: #e74c3c;
+  color: white;
+}
+
 .session-list {
   margin-top: 1rem;
 }

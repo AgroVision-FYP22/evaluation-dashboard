@@ -1,161 +1,256 @@
 // src/services/apiClient.ts
-import { DashboardData } from '../types/dashboardTypes';
+// Talks to the agentic-engine's POST /chat. In dev, CRA's "proxy" field in
+// package.json forwards the relative /chat to http://localhost:8100, so no
+// CORS is involved and no engine change was needed.
 
-// This is a placeholder for the real API client
-// In a real implementation, this would make actual HTTP requests to the backend
-export const apiClient = {
-  // Mock chat endpoint - this would be replaced with real API call
-  async chat(message: string, sessionId?: string): Promise<DashboardData> {
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // In a real implementation, this would call the actual backend API:
-    // const response = await fetch('http://localhost:8100/chat', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ message, session_id: sessionId })
-    // });
-    // return await response.json();
-    
-    // For now, return dummy data
-    return {
-      response: `Based on the analysis of your query: "${message}", the system has provided a detailed response. The answer is comprehensive and takes into account multiple factors.`,
-      citations: [
-        {
-          title: "AgroVision Technical Documentation",
-          url: "https://example.com/tech-docs",
-          page: "Section 4.2"
-        },
-        {
-          title: "Agricultural Best Practices Guide",
-          url: "https://example.com/best-practices",
-          page: "Chapter 7"
-        }
-      ],
-      metrics: {
-        responseTime: Math.floor(Math.random() * 3000) + 1000,
-        totalTokens: Math.floor(Math.random() * 1000) + 500,
-        llmCalls: Math.floor(Math.random() * 5) + 2,
-        toolCalls: Math.floor(Math.random() * 4) + 1,
-        totalProcessingTime: Math.floor(Math.random() * 3500) + 1500
-      },
-      agentPerformance: {
-        soil: {
-          reliability: Math.random() * 0.2 + 0.8, // 0.8 to 1.0
-          successRate: Math.random() * 0.2 + 0.8,
-          confidence: Math.random() * 0.2 + 0.8,
-          tokenUsage: Math.floor(Math.random() * 300) + 100,
-          llmCalls: Math.floor(Math.random() * 2) + 1,
-          toolCalls: Math.floor(Math.random() * 2) + 1
-        },
-        weather: {
-          reliability: Math.random() * 0.2 + 0.8,
-          successRate: Math.random() * 0.2 + 0.8,
-          confidence: Math.random() * 0.2 + 0.8,
-          tokenUsage: Math.floor(Math.random() * 250) + 100,
-          llmCalls: Math.floor(Math.random() * 2) + 1,
-          toolCalls: Math.floor(Math.random() * 2) + 1
-        },
-        disease: {
-          reliability: Math.random() * 0.2 + 0.7,
-          successRate: Math.random() * 0.2 + 0.7,
-          confidence: Math.random() * 0.2 + 0.7,
-          tokenUsage: Math.floor(Math.random() * 200) + 50,
-          llmCalls: Math.floor(Math.random() * 2) + 1,
-          toolCalls: Math.floor(Math.random() * 2) + 1
-        }
-      },
-      agentExecution: [
-        {
-          agent: "orchestrator",
-          status: "success",
-          startTime: new Date(Date.now() - 10000).toISOString(),
-          endTime: new Date(Date.now() - 5000).toISOString(),
-          duration: 5000,
-          message: "Planning the analysis workflow"
-        },
-        {
-          agent: "soil",
-          status: "success",
-          startTime: new Date(Date.now() - 5000).toISOString(),
-          endTime: new Date(Date.now() - 3000).toISOString(),
-          duration: 2000,
-          message: "Analyzing soil properties"
-        },
-        {
-          agent: "weather",
-          status: "success",
-          startTime: new Date(Date.now() - 5000).toISOString(),
-          endTime: new Date(Date.now() - 2000).toISOString(),
-          duration: 3000,
-          message: "Checking weather conditions"
-        },
-        {
-          agent: "synthesizer",
-          status: "success",
-          startTime: new Date(Date.now() - 2000).toISOString(),
-          endTime: new Date(Date.now()).toISOString(),
-          duration: 2000,
-          message: "Synthesizing final response"
-        },
-        {
-          agent: "judge",
-          status: "success",
-          startTime: new Date(Date.now()).toISOString(),
-          endTime: new Date(Date.now() + 1000).toISOString(),
-          duration: 1000,
-          message: "Validating response quality"
-        }
-      ],
-      stateSnapshot: {
-        intent: "multi_query",
-        plannerNote: "Complex multi-domain analysis requested",
-        plan: [
-          {
-            agent: "soil",
-            sub_question: "What are the soil conditions?",
-            depends_on: []
-          },
-          {
-            agent: "weather",
-            sub_question: "What are the weather conditions?",
-            depends_on: []
-          }
-        ],
-        workers: {
-          soil: {
-            status: "complete",
-            payload: {
-              pH: 6.5,
-              nitrogen: 80,
-              potassium: 45,
-              phosphorus: 25
-            },
-            notes: "Soil analysis completed successfully"
-          },
-          weather: {
-            status: "complete",
-            payload: {
-              temperature: 28,
-              humidity: 75,
-              rainfall: 0
-            },
-            notes: "Weather conditions analyzed"
-          }
-        },
-        synthesis: "Based on the multi-domain analysis, the soil is suitable for rice cultivation with some adjustments needed.",
-        judge_verdict: "approved",
-        grounding_verdict: "approved",
-        citations: [
-          {
-            title: "AgroVision Technical Documentation",
-            url: "https://example.com/tech-docs",
-            page: "Section 4.2"
-          }
-        ],
-        replan_count: 0,
-        retry_count: 0
-      }
+import {
+  AgentExecution,
+  AgentPerformance,
+  AgentStatus,
+  Citation,
+  DashboardData,
+  EngineChatResponse,
+  EngineStateSnapshot,
+} from '../types/dashboardTypes';
+import { dummyDashboardData } from './dummyData';
+
+const CHAT_URL = '/chat';
+const SESSION_DELETE_URL = (sessionId: string) => `/sessions/${encodeURIComponent(sessionId)}`;
+const REQUEST_TIMEOUT_MS = 5 * 60 * 1000; // a judged multi-worker turn can be slow
+
+/** Set REACT_APP_USE_MOCK=true to develop the UI without the engine running. */
+const USE_MOCK = process.env.REACT_APP_USE_MOCK === 'true';
+
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public readonly status?: number,
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
+export interface ChatResult extends DashboardData {
+  /** Engine-measured total; client-measured latency is in metrics.responseTime. */
+}
+
+function mapStatus(engineStatus: string | undefined): AgentStatus {
+  if (engineStatus === 'complete') return 'success';
+  if (engineStatus === 'failed') return 'failed';
+  return 'pending';
+}
+
+function adaptCitations(raw: EngineChatResponse['citations']): Citation[] {
+  return raw.map((c, i) => ({
+    title: c.source || c.subject || `Source ${i + 1}`,
+    url: c.url ?? '',
+    page: c.page != null ? String(c.page) : '',
+  }));
+}
+
+function adaptPerformance(snapshot: EngineStateSnapshot): Record<string, AgentPerformance> {
+  const perf: Record<string, AgentPerformance> = {};
+  for (const [agent, post] of Object.entries(snapshot.workers ?? {})) {
+    const payload = post.payload ?? null;
+    const confidence =
+      payload && typeof payload === 'object' && 'confidence' in payload
+        ? typeof payload.confidence === 'number'
+          ? payload.confidence
+          : null
+        : null;
+    perf[agent] = {
+      agent,
+      status: mapStatus(post.status),
+      confidence,
+      notes: post.notes ?? '',
+      payload,
+      tokenUsage: null,
+      llmCalls: null,
+      toolCalls: null,
     };
   }
+  return perf;
+}
+
+function adaptExecution(snapshot: EngineStateSnapshot, analytics?: EngineChatResponse['analytics']): AgentExecution[] {
+  const steps: AgentExecution[] = [];
+  const workers = snapshot.workers ?? {};
+
+  steps.push({
+    agent: 'orchestrator',
+    role: 'planner',
+    status: snapshot.intent ? 'success' : 'pending',
+    message:
+      snapshot.plan.length > 0
+        ? `Routed ${snapshot.plan.length} task(s): ${snapshot.plan.map((t) => t.agent).join(', ')}`
+        : snapshot.planner_note
+          ? snapshot.planner_note
+          : 'Direct reply (no specialists dispatched)',
+    dependsOn: [],
+    duration: analytics?.nodes?.orchestrate?.duration_ms ?? null,
+  });
+
+  for (const task of snapshot.plan) {
+    const post = workers[task.agent];
+    steps.push({
+      agent: task.agent,
+      role: 'worker',
+      status: post ? mapStatus(post.status) : 'failed',
+      message: task.sub_question,
+      dependsOn: task.depends_on,
+      duration: analytics?.nodes?.[task.agent]?.duration_ms ?? null,
+    });
+  }
+
+  steps.push({
+    agent: 'synthesizer',
+    role: 'synthesizer',
+    status: snapshot.synthesis ? 'success' : 'pending',
+    message: snapshot.synthesis ? 'Drafted the final answer' : 'No draft recorded',
+    dependsOn: [],
+    duration: analytics?.nodes?.synthesize?.duration_ms ?? null,
+  });
+
+  const verdict = snapshot.judge_verdict;
+  steps.push({
+    agent: 'judge',
+    role: 'judge',
+    status: verdict ? (verdict.startsWith('APPROVED') ? 'success' : 'pending') : 'pending',
+    message: verdict ?? 'Awaiting verdict',
+    dependsOn: [],
+    duration: analytics?.nodes?.judge?.duration_ms ?? null,
+  });
+
+  return steps;
+}
+
+function adaptResponse(raw: EngineChatResponse, elapsedMs: number): DashboardData {
+  const snapshot = raw.state_snapshot;
+  const analytics = raw.analytics;
+
+  const metrics: DashboardData['metrics'] = {
+    responseTime: Math.round(elapsedMs),
+    totalTokens: analytics ? analytics.tokens_in + analytics.tokens_out : null,
+    llmCalls: analytics ? analytics.llm_calls : null,
+    toolCalls: analytics ? analytics.tool_calls : null,
+    totalProcessingTime: analytics ? analytics.elapsed_ms : null,
+  };
+
+  // Fill per-agent token/call counts once analytics exists.
+  const perf = snapshot ? adaptPerformance(snapshot) : {};
+  if (analytics?.per_agent) {
+    for (const [agent, counts] of Object.entries(analytics.per_agent)) {
+      perf[agent] = {
+        ...(perf[agent] ?? {
+          agent,
+          status: 'success' as AgentStatus,
+          confidence: null,
+          notes: '',
+          payload: null,
+        }),
+        tokenUsage: counts.tokens_in + counts.tokens_out,
+        llmCalls: counts.llm_calls,
+        toolCalls: counts.tool_calls,
+      };
+    }
+  }
+
+  const emptySnapshot: EngineStateSnapshot = {
+    intent: null,
+    planner_note: null,
+    plan: [],
+    workers: {},
+    synthesis: null,
+    judge_verdict: null,
+    grounding_verdict: null,
+    citations: [],
+    replan_count: 0,
+    retry_count: 0,
+  };
+
+  return {
+    sessionId: raw.session_id,
+    response: raw.response,
+    citations: adaptCitations(raw.citations ?? []),
+    metrics,
+    agentPerformance: perf,
+    agentExecution: snapshot ? adaptExecution(snapshot, analytics) : [],
+    stateSnapshot: snapshot ?? emptySnapshot,
+  };
+}
+
+async function parseError(res: Response): Promise<never> {
+  let detail = `${res.status} ${res.statusText}`;
+  try {
+    const body = await res.json();
+    if (body?.detail) detail = String(body.detail);
+  } catch {
+    // keep status-based message
+  }
+  if (res.status === 500) {
+    throw new ApiError('The engine failed to process this turn (500). Check its terminal output.', 500);
+  }
+  throw new ApiError(detail, res.status);
+}
+
+async function chatViaEngine(
+  message: string,
+  sessionId?: string,
+  imageUrl?: string,
+): Promise<DashboardData> {
+  const started = performance.now();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    const res = await fetch(CHAT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message,
+        session_id: sessionId ?? undefined,
+        image_url: imageUrl?.trim() ? imageUrl.trim() : undefined,
+      }),
+      signal: controller.signal,
+    });
+    if (!res.ok) await parseError(res);
+    const raw = (await res.json()) as EngineChatResponse;
+    return adaptResponse(raw, performance.now() - started);
+  } catch (err) {
+    if (err instanceof ApiError) throw err;
+    if (err instanceof DOMException && err.name === 'AbortError') {
+      throw new ApiError(`Request timed out after ${REQUEST_TIMEOUT_MS / 1000}s.`);
+    }
+    throw new ApiError(
+      'Cannot reach the agentic engine at /chat. Is it running on port 8100?',
+    );
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+export const apiClient = {
+  async chat(
+    message: string,
+    sessionId?: string,
+    imageUrl?: string,
+  ): Promise<DashboardData> {
+    if (USE_MOCK) {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      return { ...dummyDashboardData, sessionId: sessionId ?? 'mock-session' };
+    }
+    return chatViaEngine(message, sessionId, imageUrl);
+  },
+
+  /** Drop a session's conversation memory on the engine (best effort). */
+  async deleteSession(sessionId: string): Promise<void> {
+    if (USE_MOCK) return;
+    try {
+      const res = await fetch(SESSION_DELETE_URL(sessionId), { method: 'DELETE' });
+      if (!res.ok && res.status !== 404) await parseError(res);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError('Cannot reach the agentic engine to clear session memory.');
+    }
+  },
 };

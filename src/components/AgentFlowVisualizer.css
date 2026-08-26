@@ -13,6 +13,65 @@
   color: #2c3e50;
 }
 
+.flow-subtitle {
+  color: #7f8c8d;
+  font-size: 0.9rem;
+  margin: 0 0 1rem 0;
+}
+
+/* Span-based status dots (pseudo-element dot is disabled below). */
+.flow-node::before {
+  content: none;
+}
+
+.flow-dot {
+  position: absolute;
+  left: 10px;
+  top: 14px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 3px solid white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+  z-index: 1;
+}
+
+.flow-dot-success { background-color: #2ecc71; }
+.flow-dot-failed { background-color: #e74c3c; }
+.flow-dot-pending { background-color: #f39c12; }
+
+.flow-node-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+
+.flow-node-title h4 {
+  margin: 0;
+}
+
+.role-badge {
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0.2rem 0.55rem;
+  border-radius: 10px;
+}
+
+.flow-message {
+  color: #2c3e50 !important;
+}
+
+.flow-deps {
+  margin-top: 0.35rem !important;
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
 .flow-timeline {
   position: relative;
   margin: 2rem 0;

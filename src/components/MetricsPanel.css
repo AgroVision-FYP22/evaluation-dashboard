@@ -45,6 +45,76 @@
   color: #2c3e50;
 }
 
+.metric-value.metric-na {
+  color: #95a5a6;
+}
+
+.metric-source {
+  margin: 0.25rem 0 0 0;
+  font-size: 0.7rem;
+  color: #95a5a6;
+}
+
+.snapshot-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 2rem;
+  padding: 0.75rem 1rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #2c3e50;
+  margin-bottom: 1.5rem;
+}
+
+.verdict-approved {
+  color: #27ae60;
+  font-weight: 600;
+}
+
+.verdict-rejected {
+  color: #e74c3c;
+  font-weight: 600;
+}
+
+.analytics-hint {
+  color: #7f8c8d;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin: 0.5rem 0;
+}
+
+.agent-status-chip {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.agent-status-chip.status-success {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.agent-status-chip.status-failed {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.agent-status-chip.status-pending {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.agent-notes {
+  margin: 0.75rem 0 0 0;
+  font-size: 0.85rem;
+  color: #7f8c8d;
+  border-top: 1px solid #e9ecef;
+  padding-top: 0.5rem;
+}
+
 .charts-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));

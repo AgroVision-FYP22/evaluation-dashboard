@@ -1,51 +1,72 @@
 // src/components/AgentFlowVisualizer.tsx
+// Routing-plan timeline built from the engine's real state snapshot: planner
+// decision → dispatched workers (with dependencies) → synthesizer → judge.
+// Per-node durations render only when the engine exposes node analytics.
+
 import React from 'react';
 import './AgentFlowVisualizer.css';
-
-interface AgentExecution {
-  agent: string;
-  status: 'success' | 'failed' | 'pending';
-  startTime: string;
-  endTime: string;
-  duration: number;
-  message: string;
-}
+import { AgentExecution } from '../types/dashboardTypes';
 
 interface AgentFlowVisualizerProps {
   agentExecution: AgentExecution[];
 }
 
-const AgentFlowVisualizer: React.FC<AgentFlowVisualizerProps> = ({ agentExecution }) => {
-  // Sort by start time
-  const sortedExecution = [...agentExecution].sort((a, b) => 
-    new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
-  );
+const ROLE_COLORS: Record<AgentExecution['role'], string> = {
+  planner: '#8e44ad',
+  worker: '#3498db',
+  synthesizer: '#e67e22',
+  judge: '#27ae60',
+};
 
-  // Determine status color
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'success': return '#2ecc71';
-      case 'failed': return '#e74c3c';
-      case 'pending': return '#f39c12';
-      default: return '#95a5a6';
-    }
-  };
+function statusDotClass(status: string): string {
+  return `flow-dot-${status}`;
+}
+
+const AgentFlowVisualizer: React.FC<AgentFlowVisualizerProps> = ({ agentExecution }) => {
+  if (!agentExecution.length) return null;
 
   return (
     <div className="agent-flow-visualizer">
       <h2>Agent Execution Flow</h2>
+      <p className="flow-subtitle">
+        Reconstructed from this turn's state snapshot — plan order, worker outcomes and the
+        judge ruling. Workers listed with a dependency ran after their peers completed.
+      </p>
       <div className="flow-timeline">
-        {sortedExecution.map((execution, index) => (
+        {agentExecution.map((step, index) => (
           <div key={index} className="flow-node">
-            <div className="flow-node-content">
-              <h4>{execution.agent.charAt(0).toUpperCase() + execution.agent.slice(1)}</h4>
-              <p>{execution.message}</p>
-              <div className="status" style={{ backgroundColor: getStatusColor(execution.status) }}>
-                {execution.status.charAt(0).toUpperCase() + execution.status.slice(1)}
+            <span className={`flow-dot ${statusDotClass(step.status)}`} />
+            <div
+              className="flow-node-content"
+              style={{ borderLeftColor: ROLE_COLORS[step.role] }}
+            >
+              <div className="flow-node-title">
+                <h4>{step.agent}</h4>
+                <span
+                  className="role-badge"
+                  style={{ backgroundColor: ROLE_COLORS[step.role] }}
+                >
+                  {step.role}
+                </span>
+                <span
+                  className={`status ${
+                    step.status === 'success'
+                      ? 'success'
+                      : step.status === 'failed'
+                        ? 'failed'
+                        : 'pending'
+                  }`}
+                >
+                  {step.status}
+                </span>
               </div>
-              <div className="duration">
-                Duration: {execution.duration} ms
-              </div>
+              <p className="flow-message">{step.message}</p>
+              {step.dependsOn.length > 0 && (
+                <p className="flow-deps">depends on: {step.dependsOn.join(', ')}</p>
+              )}
+              {step.duration !== null && (
+                <div className="duration">Duration: {Math.round(step.duration)} ms</div>
+              )}
             </div>
           </div>
         ))}
