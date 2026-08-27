@@ -43,6 +43,20 @@ const MetricsPanel: React.FC<MetricsPanelProps> = ({ metrics, agentPerformance, 
           <p className="metric-source">client-measured round trip</p>
         </div>
         <div className="metric-card">
+          <h3>CPU Time</h3>
+          <div className={`metric-value ${metrics.cpuTimeMs === null ? 'metric-na' : ''}`}>
+            {fmt(metrics.cpuTimeMs)} ms
+          </div>
+          <p className="metric-source">{hasAnalytics ? 'engine-reported' : 'not exposed by engine'}</p>
+        </div>
+        <div className="metric-card">
+          <h3>RAM (RSS)</h3>
+          <div className={`metric-value ${metrics.ramMb === null ? 'metric-na' : ''}`}>
+            {fmt(metrics.ramMb)} MB
+          </div>
+          <p className="metric-source">{hasAnalytics ? 'engine-reported' : 'not exposed by engine'}</p>
+        </div>
+        <div className="metric-card">
           <h3>Total Tokens</h3>
           <div className={`metric-value ${metrics.totalTokens === null ? 'metric-na' : ''}`}>
             {fmt(metrics.totalTokens)}

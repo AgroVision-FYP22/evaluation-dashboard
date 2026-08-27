@@ -5,6 +5,7 @@
   padding: 1.5rem;
   margin-bottom: 2rem;
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  position: relative;
 }
 
 .chat-interface h2 {
@@ -13,12 +14,97 @@
   color: #2c3e50;
 }
 
-.chat-input {
+.chat-form {
   display: flex;
-  margin-bottom: 1rem;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
-.chat-input input {
+/* ── Image preview strip ── */
+.image-preview-strip {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background-color: #f0f4f8;
+  border: 1px dashed #3498db;
+  border-radius: 6px;
+  padding: 0.6rem 0.75rem;
+}
+
+.img-thumbnail {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid #bdc3c7;
+  flex-shrink: 0;
+}
+
+.img-meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.img-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #2c3e50;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.img-size {
+  font-size: 0.75rem;
+  color: #7f8c8d;
+}
+
+.remove-img-btn {
+  background: none;
+  border: 1px solid #bdc3c7;
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #7f8c8d;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.remove-img-btn:hover:not(:disabled) {
+  background-color: #e74c3c;
+  border-color: #e74c3c;
+  color: white;
+}
+
+.remove-img-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Upload error ── */
+.upload-error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+/* ── Input row ── */
+.chat-input-row {
+  display: flex;
+}
+
+.main-input {
   flex: 1;
   padding: 0.75rem;
   border: 1px solid #bdc3c7;
@@ -27,11 +113,36 @@
   outline: none;
 }
 
-.chat-input input:focus {
+.main-input:focus {
   border-color: #3498db;
 }
 
-.chat-input button {
+.toggle-img-btn {
+  padding: 0 1rem;
+  background-color: #ecf0f1;
+  border: 1px solid #bdc3c7;
+  border-left: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  transition: background-color 0.15s;
+}
+
+.toggle-img-btn:hover:not(:disabled) {
+  background-color: #d5dbdb;
+}
+
+/* Green badge when an image is already attached */
+.toggle-img-btn.has-image {
+  background-color: #d4edda;
+  border-color: #27ae60;
+}
+
+.toggle-img-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.submit-btn {
   padding: 0.75rem 1.5rem;
   background-color: #3498db;
   color: white;
@@ -42,15 +153,16 @@
   transition: background-color 0.2s;
 }
 
-.chat-input button:hover:not(:disabled) {
+.submit-btn:hover:not(:disabled) {
   background-color: #2980b9;
 }
 
-.chat-input button:disabled {
+.submit-btn:disabled {
   background-color: #bdc3c7;
   cursor: not-allowed;
 }
 
+/* ── Loading overlay ── */
 .loading-overlay {
   position: absolute;
   top: 0;
@@ -78,3 +190,4 @@
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
