@@ -44,6 +44,8 @@ export interface EngineStateSnapshot {
  */
 export interface EngineAnalytics {
   elapsed_ms: number;
+  cpu_time_ms: number;
+  ram_mb: number;
   llm_calls: number;
   tool_calls: number;
   tokens_in: number;
@@ -76,13 +78,15 @@ export interface Citation {
 }
 
 export interface Metrics {
-  /** Client-measured round-trip latency in ms — always available. */
+  /** Client-measured round-trip latency in ms ? always available. */
   responseTime: number;
   totalTokens: number | null;
   llmCalls: number | null;
   toolCalls: number | null;
   /** Engine-measured graph runtime in ms; null until analytics is exposed. */
   totalProcessingTime: number | null;
+  cpuTimeMs: number | null;
+  ramMb: number | null;
 }
 
 export type AgentStatus = 'success' | 'failed' | 'pending';

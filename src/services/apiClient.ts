@@ -14,12 +14,21 @@ import {
 } from '../types/dashboardTypes';
 import { dummyDashboardData } from './dummyData';
 
-const CHAT_URL = '/chat';
-const SESSION_DELETE_URL = (sessionId: string) => `/sessions/${encodeURIComponent(sessionId)}`;
+const CHAT_URL = process.env.REACT_APP_EVAL_API_URL || '/chat';
+const IMAGE_UPLOAD_URL = process.env.REACT_APP_EVAL_API_URL
+  ? `${process.env.REACT_APP_EVAL_API_URL}/images`
+  : '/chat/eval/images';
+const SESSION_DELETE_URL = (sessionId: string) => {
+  if (process.env.REACT_APP_EVAL_API_URL) {
+    return `${process.env.REACT_APP_EVAL_API_URL}/sessions/${encodeURIComponent(sessionId)}`;
+  }
+  return `/sessions/${encodeURIComponent(sessionId)}`;
+};
 const REQUEST_TIMEOUT_MS = 5 * 60 * 1000; // a judged multi-worker turn can be slow
 
 /** Set REACT_APP_USE_MOCK=true to develop the UI without the engine running. */
 const USE_MOCK = process.env.REACT_APP_USE_MOCK === 'true';
+const EVAL_API_KEY = process.env.REACT_APP_EVAL_API_KEY || '';
 
 export class ApiError extends Error {
   constructor(
@@ -135,6 +144,8 @@ function adaptResponse(raw: EngineChatResponse, elapsedMs: number): DashboardDat
     llmCalls: analytics ? analytics.llm_calls : null,
     toolCalls: analytics ? analytics.tool_calls : null,
     totalProcessingTime: analytics ? analytics.elapsed_ms : null,
+    cpuTimeMs: analytics?.cpu_time_ms ?? null,
+    ramMb: analytics?.ram_mb ?? null,
   };
 
   // Fill per-agent token/call counts once analytics exists.
@@ -203,9 +214,14 @@ async function chatViaEngine(
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (EVAL_API_KEY) {
+      headers['X-Eval-Api-Key'] = EVAL_API_KEY;
+    }
+
     const res = await fetch(CHAT_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({
         message,
         session_id: sessionId ?? undefined,
@@ -230,6 +246,42 @@ async function chatViaEngine(
 }
 
 export const apiClient = {
+  /** Upload an image and return its Cloudinary CDN URL, which is then passed as image_url in chat. */
+  async uploadImage(file: File): Promise<string> {
+    if (USE_MOCK) {
+      // In mock mode return a placeholder so the chat flow still works.
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      return 'https://res.cloudinary.com/demo/image/upload/sample.jpg';
+    }
+    const form = new FormData();
+    form.append('file', file);
+    const headers: Record<string, string> = {};
+    if (EVAL_API_KEY) {
+      headers['X-Eval-Api-Key'] = EVAL_API_KEY;
+    }
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 60_000); // 60 s upload timeout
+    try {
+      const res = await fetch(IMAGE_UPLOAD_URL, {
+        method: 'POST',
+        headers,
+        body: form,
+        signal: controller.signal,
+      });
+      if (!res.ok) await parseError(res);
+      const json = await res.json();
+      return json.url as string;
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        throw new ApiError('Image upload timed out after 60 s.');
+      }
+      throw new ApiError('Image upload failed. Is the backend reachable?');
+    } finally {
+      clearTimeout(timer);
+    }
+  },
+
   async chat(
     message: string,
     sessionId?: string,
@@ -246,7 +298,11 @@ export const apiClient = {
   async deleteSession(sessionId: string): Promise<void> {
     if (USE_MOCK) return;
     try {
-      const res = await fetch(SESSION_DELETE_URL(sessionId), { method: 'DELETE' });
+      const headers: Record<string, string> = {};
+      if (EVAL_API_KEY) {
+        headers['X-Eval-Api-Key'] = EVAL_API_KEY;
+      }
+      const res = await fetch(SESSION_DELETE_URL(sessionId), { method: 'DELETE', headers });
       if (!res.ok && res.status !== 404) await parseError(res);
     } catch (err) {
       if (err instanceof ApiError) throw err;

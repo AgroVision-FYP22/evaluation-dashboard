@@ -21,6 +21,8 @@ export const dummyDashboardData: DashboardData = {
     llmCalls: null,
     toolCalls: null,
     totalProcessingTime: null,
+    cpuTimeMs: null,
+    ramMb: null,
   },
   agentPerformance: {
     soil: {
