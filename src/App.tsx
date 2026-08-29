@@ -77,7 +77,7 @@ function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>AgroVision Evaluation Dashboard</h1>
+        <h1>Croptimum Evaluation Dashboard</h1>
         {currentSession && (
           <span className="session-badge">session: {currentSession}</span>
         )}
@@ -127,7 +127,7 @@ function App() {
       </div>
 
       <footer className="app-footer">
-        <p>AgroVision Evaluation Dashboard v1.0</p>
+        <p>Croptimum Evaluation Dashboard v1.0</p>
       </footer>
     </div>
   );
